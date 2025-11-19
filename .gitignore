@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Config sensibles
+.env
+.env.local
+
+# Vendor (si un jour tu ajoutes Composer)
+vendor/
+
+# Cache/temp
+tmp/
+.cache/
