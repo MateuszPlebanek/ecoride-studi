@@ -1,7 +1,8 @@
 <?php
+// public/index.php
 
 spl_autoload_register(function (string $class) {
-    $prefix = 'App\\';
+    $prefix  = 'App\\';
     $baseDir = __DIR__ . '/../src/';
 
     if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
@@ -17,12 +18,34 @@ spl_autoload_register(function (string $class) {
 });
 
 use App\Controller\HomeController;
+use App\Controller\CarpoolController;
+use App\Controller\AuthController;
+use App\Controller\StaticController;
 
 $page = $_GET['page'] ?? 'home';
 
 switch ($page) {
     case 'home':
-    default:
         (new HomeController())->index();
         break;
+
+    case 'carpools':
+        (new CarpoolController())->index();
+        break;
+
+    case 'login':
+        (new AuthController())->login();
+        break;
+
+    case 'contact':
+        (new StaticController())->contact();
+        break;
+
+    case 'legal':
+        (new StaticController())->legal();
+        break;
+
+    default:
+        http_response_code(404);
+        echo 'Page not found';
 }
