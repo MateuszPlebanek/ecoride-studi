@@ -53,7 +53,6 @@
         </p>
 
         <?php if (!empty($carpools)): ?>
-             <!-- 🔽 FORMULAIRE DE FILTRES 🔽 -->
         <form class="filters" method="get">
             <input type="hidden" name="page" value="carpools">
             <input type="hidden" name="departure_city" value="<?= htmlspecialchars($departureCity) ?>">

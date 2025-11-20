@@ -123,4 +123,78 @@ class CarpoolRepository
         $result = $stmt->fetch();
         return $result ?: null;
     }
+    public function findDetail(int $id): ?array
+    {
+        $sql = "
+            SELECT 
+                c.*,
+                u.id          AS driver_id,
+                u.pseudo      AS driver_pseudo,
+                u.photo       AS driver_photo,
+                u.rating      AS driver_rating,
+                u.preferences AS driver_preferences,
+                v.model       AS vehicle_model,
+                v.energy      AS vehicle_energy,
+                b.name        AS vehicle_brand
+            FROM carpools c
+            JOIN users u    ON c.driver_id  = u.id
+            JOIN vehicles v ON c.vehicle_id = v.id
+            JOIN brands b   ON v.brand_id   = b.id
+            WHERE c.id = :id
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $carpool = $stmt->fetch();
+        return $carpool ?: null;
+    }
+
+    /**
+     * Avis liés à un covoiturage.
+     */
+    public function findReviewsForCarpool(int $carpoolId): array
+    {
+        $sql = "
+            SELECT 
+                r.id,
+                r.rating,
+                r.comment,
+                r.created_at,
+                u.pseudo AS author_pseudo
+            FROM reviews r
+            LEFT JOIN users u ON r.author_id = u.id
+            WHERE r.carpool_id = :carpool_id
+            ORDER BY r.created_at DESC
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':carpool_id', $carpoolId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Vérifie si un utilisateur participe déjà à un covoiturage.
+     */
+    public function userAlreadyInCarpool(int $userId, int $carpoolId): bool
+    {
+        $sql = "
+            SELECT id
+            FROM passenger_trips
+            WHERE user_id = :user_id
+              AND carpool_id = :carpool_id
+            LIMIT 1
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ':user_id'    => $userId,
+            ':carpool_id' => $carpoolId,
+        ]);
+
+        return (bool) $stmt->fetchColumn();
+    }
 }

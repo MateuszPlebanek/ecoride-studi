@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Model\CarpoolRepository;
-use App\Security\Csrf;
 
 class CarpoolController
 {
@@ -46,29 +45,65 @@ class CarpoolController
             'min_rating'   => $minRating,
         ];
 
-        $carpools         = [];
+        $carpools = [];
         $suggestedCarpool = null;
-        $requestedDate    = $departureDate;
+        $requestedDate = $departureDate;
 
         if ($departureCity && $arrivalCity && $departureDate) {
-            $carpools = $repository->findByCityAndDate(
-                $departureCity,
-                $arrivalCity,
-                $departureDate,
-                $filters
-            );
+            $carpools = $repository->findByCityAndDate($departureCity, $arrivalCity, $departureDate, $filters);
 
             if (empty($carpools)) {
-                $suggestedCarpool = $repository->findNextAvailable(
-                    $departureCity,
-                    $arrivalCity,
-                    $departureDate
-                );
+                $suggestedCarpool = $repository->findNextAvailable($departureCity, $arrivalCity, $departureDate);
             }
         }
 
         ob_start();
         require __DIR__ . '/../View/carpools.php';
+        $content = ob_get_clean();
+
+        require __DIR__ . '/../View/layout.php';
+    }
+
+    public function show(): void
+    {
+        $title = 'Détail du covoiturage - EcoRide';
+
+        require __DIR__ . '/../../config/db.php';
+        $repository = new CarpoolRepository($pdo);
+
+        $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+
+        if ($id <= 0) {
+            http_response_code(400);
+            echo 'Covoiturage invalide.';
+            return;
+        }
+
+        $carpool = $repository->findDetail($id);
+
+        if ($carpool === null) {
+            http_response_code(404);
+            echo 'Covoiturage introuvable.';
+            return;
+        }
+
+        $reviews = $repository->findReviewsForCarpool($id);
+
+        $preferencesRaw = $carpool['driver_preferences'] ?? '';
+        $preferences = [];
+
+        if (!empty($preferencesRaw)) {
+            $parts = preg_split('/[\r\n,]+/', $preferencesRaw);
+            foreach ($parts as $p) {
+                $p = trim($p);
+                if ($p !== '') {
+                    $preferences[] = $p;
+                }
+            }
+        }
+
+        ob_start();
+        require __DIR__ . '/../View/carpool_detail.php';
         $content = ob_get_clean();
 
         require __DIR__ . '/../View/layout.php';

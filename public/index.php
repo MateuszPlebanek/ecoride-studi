@@ -32,6 +32,10 @@ switch ($page) {
     case 'carpools':
         (new CarpoolController())->index();
         break;
+        
+    case 'carpool_show':
+    (new CarpoolController())->show();
+    break;
 
     case 'login':
         (new AuthController())->login();
