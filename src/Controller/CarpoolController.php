@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Model\CarpoolRepository;
+use App\Security\Csrf;
 
 class CarpoolController
 {
@@ -10,30 +11,53 @@ class CarpoolController
     {
         $title = 'Covoiturages - EcoRide';
 
-        // Connexion BDD
         require __DIR__ . '/../../config/db.php';
 
-        // Instanciation du repository
         $repository = new CarpoolRepository($pdo);
 
-        // Récupération des paramètres de recherche (GET)
         $departureCity = $_GET['departure_city'] ?? null;
         $arrivalCity   = $_GET['arrival_city'] ?? null;
-        $departureDate = $_GET['departure_date'] ?? null; // format YYYY-MM-DD
+        $departureDate = $_GET['departure_date'] ?? null; 
+
+        $maxPrice = $_GET['max_price'] ?? null;
+
+        $hoursInput   = $_GET['max_duration_hours'] ?? null;
+        $minutesInput = $_GET['max_duration_minutes'] ?? null;
+
+        $maxDuration = null;
+        if ($hoursInput !== null || $minutesInput !== null) {
+            $h = (int) ($hoursInput ?: 0);
+            $m = (int) ($minutesInput ?: 0);
+            $totalMinutes = $h * 60 + $m;
+            if ($totalMinutes > 0) {
+                $maxDuration = $totalMinutes;
+            }
+        }
+
+        $minRating = $_GET['min_rating'] ?? null;
+        if ($minRating !== null && $minRating !== '') {
+            $minRating = (float) $minRating;
+        }
+
+        $filters = [
+            'eco'          => $_GET['eco'] ?? null,
+            'max_price'    => $maxPrice,
+            'max_duration' => $maxDuration,
+            'min_rating'   => $minRating,
+        ];
 
         $carpools         = [];
         $suggestedCarpool = null;
         $requestedDate    = $departureDate;
 
         if ($departureCity && $arrivalCity && $departureDate) {
-            // 1) Trajets correspondant à la recherche
             $carpools = $repository->findByCityAndDate(
                 $departureCity,
                 $arrivalCity,
-                $departureDate
+                $departureDate,
+                $filters
             );
 
-            // 2) Si aucun résultat, chercher le prochain trajet disponible
             if (empty($carpools)) {
                 $suggestedCarpool = $repository->findNextAvailable(
                     $departureCity,

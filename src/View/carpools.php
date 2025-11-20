@@ -1,7 +1,5 @@
 <section class="carpools">
     <h1>Covoiturages disponibles</h1>
-
-    <!-- 🔎 Formulaire de recherche sur la page Covoiturages -->
     <form action="index.php" method="get" class="search-form search-form-inline">
         <input type="hidden" name="page" value="carpools">
 
@@ -41,9 +39,9 @@
 
     <?php if (empty($departureCity) || empty($arrivalCity) || empty($requestedDate)): ?>
         <p>
-            Aucun covoiturage n’est affiché par défaut.<br>
-            Veuillez renseigner une ville de départ, une ville d’arrivée et une date
-            pour lancer une recherche.
+            Aucun covoiturage n’est affiché par défaut.  
+            Veuillez utiliser le formulaire de recherche sur la page d’accueil
+            pour choisir une ville de départ, une ville d’arrivée et une date.
         </p>
     <?php else: ?>
 
@@ -55,17 +53,72 @@
         </p>
 
         <?php if (!empty($carpools)): ?>
+             <!-- 🔽 FORMULAIRE DE FILTRES 🔽 -->
+        <form class="filters" method="get">
+            <input type="hidden" name="page" value="carpools">
+            <input type="hidden" name="departure_city" value="<?= htmlspecialchars($departureCity) ?>">
+            <input type="hidden" name="arrival_city" value="<?= htmlspecialchars($arrivalCity) ?>">
+            <input type="hidden" name="departure_date" value="<?= htmlspecialchars($requestedDate) ?>">
 
+            <label>
+                <input type="checkbox" name="eco" value="1"
+                    <?= isset($_GET['eco']) ? 'checked' : '' ?>>
+                Trajets écologiques uniquement
+            </label>
+
+            <label>
+                Prix maximum :
+                <input type="number" name="max_price" min="1"
+                       value="<?= $_GET['max_price'] ?? '' ?>">
+            </label>
+
+            <label>
+                Durée maximum :
+                 <div class="duration-group">
+                 <input
+                    type="number"
+                    name="max_duration_hours"
+                    min="0"
+                    value="<?= $_GET['max_duration_hours'] ?? '' ?>"
+                    placeholder="1"
+                    >
+                    <span>h</span>
+
+                     <input
+                    type="number"
+                    name="max_duration_minutes"
+                    min="0"
+                    max="59"
+                    value="<?= $_GET['max_duration_minutes'] ?? '' ?>"
+                     placeholder="30"
+                    >
+                    <span>min</span>
+                    </div>
+            </label>
+
+            <label>
+                Note minimale du chauffeur :
+                <input type="number" step="0.1" min="0" max="5"
+                       name="min_rating"
+                       value="<?= $_GET['min_rating'] ?? '' ?>">
+            </label>
+
+            <button type="submit">Appliquer les filtres</button>
+        </form>
+       
             <div class="carpools-list">
                 <?php foreach ($carpools as $carpool): ?>
                     <article class="carpool-card">
                         <div class="carpool-header">
                             <div class="driver-info">
-                                <?php if (!empty($carpool['driver_photo'])): ?>
-                                    <img class="driver-photo"
-                                         src="<?= htmlspecialchars($carpool['driver_photo']) ?>"
-                                         alt="Photo de <?= htmlspecialchars($carpool['driver_pseudo']) ?>">
-                                <?php endif; ?>
+                                 <?php
+                                $photo = !empty($carpool['driver_photo'])
+                                    ? $carpool['driver_photo']
+                                    : '/assets/images/driver-avatar.svg';
+                                ?>
+                                <img class="driver-photo"
+                                     src="<?= htmlspecialchars($photo) ?>"
+                                     alt="Photo de <?= htmlspecialchars($carpool['driver_pseudo']) ?>">
 
                                 <div>
                                     <div class="driver-pseudo">
@@ -104,9 +157,14 @@
                         </div>
 
                         <div class="carpool-footer">
-                            <button class="btn-detail" type="button">
-                                Détail
-                            </button>
+                            <form action="index.php" method="get">
+                                <input type="hidden" name="page" value="carpool_show">
+                                <input type="hidden" name="id" value="<?= (int) $carpool['id'] ?>">
+
+                                <button type="submit" class="btn-detail">
+                                    Détail
+                                </button>
+                            </form>
                         </div>
                     </article>
                 <?php endforeach; ?>
