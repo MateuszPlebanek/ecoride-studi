@@ -17,7 +17,7 @@ Ce projet est réalisé dans le cadre du Titre Professionnel DWWM / ECF.
 - **Architecture :** MVC (sans framework)
 - **Base de données relationnelle :** MySQL
 - **Base NoSQL :** MongoDB (prévu pour les parties avis / logs)
-- **Front :** HTML5, CSS3, un peu de JavaScript vanilla
+- **Front :** HTML5, CSS3, JavaScript vanilla
 - **Serveur de dev :** `php -S`
 
 ### Configuration de la base de données
@@ -38,5 +38,6 @@ Après avoir cloné le dépôt :
 
 ```bash
 cd ecoride-studi
-Importer la base de données MySQL (fichier sql/schema.sql), puis démarrer le serveur PHP intégré :
+Importer la base de données MySQL (fichier sql/schema.sql), 
+puis démarrer le serveur PHP intégré :
 php -S localhost:8001 -t public

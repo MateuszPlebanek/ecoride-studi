@@ -15,19 +15,21 @@ class CarpoolController
         $repository = new CarpoolRepository($pdo);
 
         $departureCity = $_GET['departure_city'] ?? null;
-        $arrivalCity   = $_GET['arrival_city'] ?? null;
+        $arrivalCity = $_GET['arrival_city'] ?? null;
         $departureDate = $_GET['departure_date'] ?? null; 
 
+     
         $maxPrice = $_GET['max_price'] ?? null;
 
-        $hoursInput   = $_GET['max_duration_hours'] ?? null;
+        $hoursInput = $_GET['max_duration_hours'] ?? null;
         $minutesInput = $_GET['max_duration_minutes'] ?? null;
-
         $maxDuration = null;
+
         if ($hoursInput !== null || $minutesInput !== null) {
             $h = (int) ($hoursInput ?: 0);
             $m = (int) ($minutesInput ?: 0);
             $totalMinutes = $h * 60 + $m;
+
             if ($totalMinutes > 0) {
                 $maxDuration = $totalMinutes;
             }
@@ -50,6 +52,7 @@ class CarpoolController
         $requestedDate = $departureDate;
 
         if ($departureCity && $arrivalCity && $departureDate) {
+
             $carpools = $repository->findByCityAndDate($departureCity, $arrivalCity, $departureDate, $filters);
 
             if (empty($carpools)) {
@@ -107,5 +110,39 @@ class CarpoolController
         $content = ob_get_clean();
 
         require __DIR__ . '/../View/layout.php';
+    }
+
+    public function participate(): void
+    {
+    
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?page=carpools');
+            exit;
+        }
+
+        if (empty($_SESSION['user_id'])) {
+            header('Location: index.php?page=login');
+            exit;
+        }
+
+        $userId    = (int) $_SESSION['user_id'];
+        $carpoolId = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+
+        if ($carpoolId <= 0) {
+            header('Location: index.php?page=carpools');
+            exit;
+        }
+
+        require __DIR__ . '/../../config/db.php';
+        $repository = new CarpoolRepository($pdo);
+
+        $success = $repository->participateUser($userId, $carpoolId);
+
+        if ($success) {
+            header('Location: index.php?page=carpool_show&id=' . $carpoolId . '&joined=1');
+        } else {
+            header('Location: index.php?page=carpool_show&id=' . $carpoolId . '&error=1');
+        }
+        exit;
     }
 }

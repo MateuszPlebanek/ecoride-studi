@@ -151,9 +151,7 @@ class CarpoolRepository
         return $carpool ?: null;
     }
 
-    /**
-     * Avis liés à un covoiturage.
-     */
+  
     public function findReviewsForCarpool(int $carpoolId): array
     {
         $sql = "
@@ -176,9 +174,6 @@ class CarpoolRepository
         return $stmt->fetchAll();
     }
 
-    /**
-     * Vérifie si un utilisateur participe déjà à un covoiturage.
-     */
     public function userAlreadyInCarpool(int $userId, int $carpoolId): bool
     {
         $sql = "
@@ -197,4 +192,68 @@ class CarpoolRepository
 
         return (bool) $stmt->fetchColumn();
     }
+    public function participateUser(int $userId, int $carpoolId): bool
+{
+    $stmt = $this->pdo->prepare("
+        SELECT id, remaining_seats, price
+        FROM carpools
+        WHERE id = :id
+        FOR UPDATE
+    ");
+    $stmt->execute([':id' => $carpoolId]);
+    $carpool = $stmt->fetch();
+
+    if (!$carpool) {
+        return false;
+    }
+
+    if ((int)$carpool['remaining_seats'] <= 0) {
+        return false;
+    }
+
+    $stmtCheck = $this->pdo->prepare("
+        SELECT id
+        FROM passenger_trips
+        WHERE user_id = :user_id
+          AND carpool_id = :carpool_id
+    ");
+    $stmtCheck->execute([
+        ':user_id'    => $userId,
+        ':carpool_id' => $carpoolId,
+    ]);
+
+    if ($stmtCheck->fetch()) {
+        return false;
+    }
+
+    try {
+        $this->pdo->beginTransaction();
+
+        $stmtInsert = $this->pdo->prepare("
+            INSERT INTO passenger_trips (user_id, carpool_id)
+            VALUES (:user_id, :carpool_id)
+        ");
+        $stmtInsert->execute([
+            ':user_id'    => $userId,
+            ':carpool_id' => $carpoolId,
+        ]);
+
+        $stmtUpdate = $this->pdo->prepare("
+            UPDATE carpools
+            SET remaining_seats = remaining_seats - 1
+            WHERE id = :carpool_id
+        ");
+        $stmtUpdate->execute([
+            ':carpool_id' => $carpoolId,
+        ]);
+
+        $this->pdo->commit();
+        return true;
+    } catch (\Throwable $e) {
+        $this->pdo->rollBack();
+   
+        return false;
+    }
+}
+
 }
