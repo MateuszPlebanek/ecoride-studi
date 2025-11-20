@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Model\CarpoolRepository;
+use App\Security\Csrf;
 
 class CarpoolController
 {
@@ -15,21 +16,19 @@ class CarpoolController
         $repository = new CarpoolRepository($pdo);
 
         $departureCity = $_GET['departure_city'] ?? null;
-        $arrivalCity = $_GET['arrival_city'] ?? null;
+        $arrivalCity   = $_GET['arrival_city'] ?? null;
         $departureDate = $_GET['departure_date'] ?? null; 
 
-     
         $maxPrice = $_GET['max_price'] ?? null;
 
-        $hoursInput = $_GET['max_duration_hours'] ?? null;
+        $hoursInput   = $_GET['max_duration_hours'] ?? null;
         $minutesInput = $_GET['max_duration_minutes'] ?? null;
-        $maxDuration = null;
 
+        $maxDuration = null;
         if ($hoursInput !== null || $minutesInput !== null) {
             $h = (int) ($hoursInput ?: 0);
             $m = (int) ($minutesInput ?: 0);
             $totalMinutes = $h * 60 + $m;
-
             if ($totalMinutes > 0) {
                 $maxDuration = $totalMinutes;
             }
@@ -47,16 +46,24 @@ class CarpoolController
             'min_rating'   => $minRating,
         ];
 
-        $carpools = [];
+        $carpools         = [];
         $suggestedCarpool = null;
-        $requestedDate = $departureDate;
+        $requestedDate    = $departureDate;
 
         if ($departureCity && $arrivalCity && $departureDate) {
-
-            $carpools = $repository->findByCityAndDate($departureCity, $arrivalCity, $departureDate, $filters);
+            $carpools = $repository->findByCityAndDate(
+                $departureCity,
+                $arrivalCity,
+                $departureDate,
+                $filters
+            );
 
             if (empty($carpools)) {
-                $suggestedCarpool = $repository->findNextAvailable($departureCity, $arrivalCity, $departureDate);
+                $suggestedCarpool = $repository->findNextAvailable(
+                    $departureCity,
+                    $arrivalCity,
+                    $departureDate
+                );
             }
         }
 
@@ -105,6 +112,8 @@ class CarpoolController
             }
         }
 
+        $csrfParticipateToken = Csrf::getToken('participate_form');
+
         ob_start();
         require __DIR__ . '/../View/carpool_detail.php';
         $content = ob_get_clean();
@@ -114,9 +123,19 @@ class CarpoolController
 
     public function participate(): void
     {
-    
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: index.php?page=carpools');
+            exit;
+        }
+
+        $token = $_POST['csrf_token'] ?? '';
+        if (!Csrf::checkToken('participate_form', $token)) {
+            http_response_code(400);
+            echo "Requête invalide (token CSRF manquant ou invalide).";
             exit;
         }
 
@@ -137,12 +156,8 @@ class CarpoolController
         $repository = new CarpoolRepository($pdo);
 
         $success = $repository->participateUser($userId, $carpoolId);
-
-        if ($success) {
-            header('Location: index.php?page=carpool_show&id=' . $carpoolId . '&joined=1');
-        } else {
-            header('Location: index.php?page=carpool_show&id=' . $carpoolId . '&error=1');
-        }
+       
+        header('Location: index.php?page=carpool_show&id=' . $carpoolId);
         exit;
     }
 }
