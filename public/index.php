@@ -1,8 +1,15 @@
 <?php
 // public/index.php
-
+session_set_cookie_params([
+    'secure'   => false,   // ⚠️ false en local (HTTP), true en production (HTTPS)
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 spl_autoload_register(function (string $class) {
-    $prefix  = 'App\\';
+    $prefix = 'App\\';
     $baseDir = __DIR__ . '/../src/';
 
     if (strncmp($prefix, $class, strlen($prefix)) !== 0) {
@@ -18,11 +25,11 @@ spl_autoload_register(function (string $class) {
 });
 
 use App\Controller\HomeController;
+use App\Controller\StaticController;
 use App\Controller\CarpoolController;
 use App\Controller\AuthController;
-use App\Controller\StaticController;
 
-$page = $_GET['page'] ?? 'home';
+$page = $_REQUEST['page'] ?? 'home';
 
 switch ($page) {
     case 'home':
@@ -32,17 +39,29 @@ switch ($page) {
     case 'carpools':
         (new CarpoolController())->index();
         break;
-
-    case 'carpool_show':
+    
+    case 'carpool_show':            
         (new CarpoolController())->show();
-    break;
-
-     case 'carpool_participate':
+        break;
+    
+    case 'carpool_participate':
         (new CarpoolController())->participate();
         break;
 
     case 'login':
         (new AuthController())->login();
+        break;
+    
+    case 'logout': 
+        (new AuthController())->logout();
+        break;
+
+    case 'register':
+        (new AuthController())->register();
+        break;
+
+    case 'account': 
+        (new AuthController())->account();
         break;
 
     case 'contact':

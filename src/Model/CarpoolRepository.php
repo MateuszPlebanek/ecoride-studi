@@ -84,7 +84,6 @@ class CarpoolRepository
         return $stmt->fetchAll();
     }
 
-
     public function findNextAvailable(string $departureCity, string $arrivalCity, string $date): ?array
     {
         $sql = "
@@ -123,6 +122,7 @@ class CarpoolRepository
         $result = $stmt->fetch();
         return $result ?: null;
     }
+
     public function findDetail(int $id): ?array
     {
         $sql = "
@@ -151,7 +151,6 @@ class CarpoolRepository
         return $carpool ?: null;
     }
 
-  
     public function findReviewsForCarpool(int $carpoolId): array
     {
         $sql = "
@@ -192,68 +191,94 @@ class CarpoolRepository
 
         return (bool) $stmt->fetchColumn();
     }
+
     public function participateUser(int $userId, int $carpoolId): bool
-{
-    $stmt = $this->pdo->prepare("
-        SELECT id, remaining_seats, price
-        FROM carpools
-        WHERE id = :id
-        FOR UPDATE
-    ");
-    $stmt->execute([':id' => $carpoolId]);
-    $carpool = $stmt->fetch();
+    {
+        try {
+            $this->pdo->beginTransaction();
 
-    if (!$carpool) {
-        return false;
+            $stmtCarpool = $this->pdo->prepare("
+                SELECT *
+                FROM carpools
+                WHERE id = :id
+                FOR UPDATE
+            ");
+            $stmtCarpool->execute([':id' => $carpoolId]);
+            $carpool = $stmtCarpool->fetch(PDO::FETCH_ASSOC);
+
+            if (!$carpool) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            if ((int) $carpool['remaining_seats'] <= 0) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            $stmtUser = $this->pdo->prepare("
+                SELECT id, pseudo, credits
+                FROM users
+                WHERE id = :id
+                FOR UPDATE
+            ");
+            $stmtUser->execute([':id' => $userId]);
+            $user = $stmtUser->fetch(PDO::FETCH_ASSOC);
+
+            if (!$user) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            $price = (float) $carpool['price'];
+
+            if ((float) $user['credits'] < $price) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            if ($this->userAlreadyInCarpool($userId, $carpoolId)) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            $stmtInsert = $this->pdo->prepare("
+                INSERT INTO passenger_trips (user_id, carpool_id, created_at)
+                VALUES (:user_id, :carpool_id, NOW())
+            ");
+            $stmtInsert->execute([
+                ':user_id'    => $userId,
+                ':carpool_id' => $carpoolId,
+            ]);
+
+            $stmtCredits = $this->pdo->prepare("
+                UPDATE users
+                SET credits = credits - :price
+                WHERE id = :user_id
+            ");
+            $stmtCredits->execute([
+                ':price'   => $price,
+                ':user_id' => $userId,
+            ]);
+
+            $stmtSeats = $this->pdo->prepare("
+                UPDATE carpools
+                SET remaining_seats = remaining_seats - 1
+                WHERE id = :carpool_id
+            ");
+            $stmtSeats->execute([
+                ':carpool_id' => $carpoolId,
+            ]);
+
+            $this->pdo->commit();
+            return true;
+
+        } catch (\Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            return false;
+        }
     }
-
-    if ((int)$carpool['remaining_seats'] <= 0) {
-        return false;
-    }
-
-    $stmtCheck = $this->pdo->prepare("
-        SELECT id
-        FROM passenger_trips
-        WHERE user_id = :user_id
-          AND carpool_id = :carpool_id
-    ");
-    $stmtCheck->execute([
-        ':user_id'    => $userId,
-        ':carpool_id' => $carpoolId,
-    ]);
-
-    if ($stmtCheck->fetch()) {
-        return false;
-    }
-
-    try {
-        $this->pdo->beginTransaction();
-
-        $stmtInsert = $this->pdo->prepare("
-            INSERT INTO passenger_trips (user_id, carpool_id)
-            VALUES (:user_id, :carpool_id)
-        ");
-        $stmtInsert->execute([
-            ':user_id'    => $userId,
-            ':carpool_id' => $carpoolId,
-        ]);
-
-        $stmtUpdate = $this->pdo->prepare("
-            UPDATE carpools
-            SET remaining_seats = remaining_seats - 1
-            WHERE id = :carpool_id
-        ");
-        $stmtUpdate->execute([
-            ':carpool_id' => $carpoolId,
-        ]);
-
-        $this->pdo->commit();
-        return true;
-    } catch (\Throwable $e) {
-        $this->pdo->rollBack();
-   
-        return false;
-    }
-}
-
 }
