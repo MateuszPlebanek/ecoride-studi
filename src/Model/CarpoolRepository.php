@@ -123,4 +123,137 @@ class CarpoolRepository
         $result = $stmt->fetch();
         return $result ?: null;
     }
+    public function findDetail(int $id): ?array
+    {
+        $sql = "
+            SELECT 
+                c.*,
+                u.id          AS driver_id,
+                u.pseudo      AS driver_pseudo,
+                u.photo       AS driver_photo,
+                u.rating      AS driver_rating,
+                u.preferences AS driver_preferences,
+                v.model       AS vehicle_model,
+                v.energy      AS vehicle_energy,
+                b.name        AS vehicle_brand
+            FROM carpools c
+            JOIN users u    ON c.driver_id  = u.id
+            JOIN vehicles v ON c.vehicle_id = v.id
+            JOIN brands b   ON v.brand_id   = b.id
+            WHERE c.id = :id
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $carpool = $stmt->fetch();
+        return $carpool ?: null;
+    }
+
+  
+    public function findReviewsForCarpool(int $carpoolId): array
+    {
+        $sql = "
+            SELECT 
+                r.id,
+                r.rating,
+                r.comment,
+                r.created_at,
+                u.pseudo AS author_pseudo
+            FROM reviews r
+            LEFT JOIN users u ON r.author_id = u.id
+            WHERE r.carpool_id = :carpool_id
+            ORDER BY r.created_at DESC
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':carpool_id', $carpoolId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    public function userAlreadyInCarpool(int $userId, int $carpoolId): bool
+    {
+        $sql = "
+            SELECT id
+            FROM passenger_trips
+            WHERE user_id = :user_id
+              AND carpool_id = :carpool_id
+            LIMIT 1
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ':user_id'    => $userId,
+            ':carpool_id' => $carpoolId,
+        ]);
+
+        return (bool) $stmt->fetchColumn();
+    }
+    public function participateUser(int $userId, int $carpoolId): bool
+{
+    $stmt = $this->pdo->prepare("
+        SELECT id, remaining_seats, price
+        FROM carpools
+        WHERE id = :id
+        FOR UPDATE
+    ");
+    $stmt->execute([':id' => $carpoolId]);
+    $carpool = $stmt->fetch();
+
+    if (!$carpool) {
+        return false;
+    }
+
+    if ((int)$carpool['remaining_seats'] <= 0) {
+        return false;
+    }
+
+    $stmtCheck = $this->pdo->prepare("
+        SELECT id
+        FROM passenger_trips
+        WHERE user_id = :user_id
+          AND carpool_id = :carpool_id
+    ");
+    $stmtCheck->execute([
+        ':user_id'    => $userId,
+        ':carpool_id' => $carpoolId,
+    ]);
+
+    if ($stmtCheck->fetch()) {
+        return false;
+    }
+
+    try {
+        $this->pdo->beginTransaction();
+
+        $stmtInsert = $this->pdo->prepare("
+            INSERT INTO passenger_trips (user_id, carpool_id)
+            VALUES (:user_id, :carpool_id)
+        ");
+        $stmtInsert->execute([
+            ':user_id'    => $userId,
+            ':carpool_id' => $carpoolId,
+        ]);
+
+        $stmtUpdate = $this->pdo->prepare("
+            UPDATE carpools
+            SET remaining_seats = remaining_seats - 1
+            WHERE id = :carpool_id
+        ");
+        $stmtUpdate->execute([
+            ':carpool_id' => $carpoolId,
+        ]);
+
+        $this->pdo->commit();
+        return true;
+    } catch (\Throwable $e) {
+        $this->pdo->rollBack();
+   
+        return false;
+    }
+}
+
 }

@@ -188,6 +188,317 @@ body {
     border: 3px solid #1E5631;
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
+.driver-info {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.driver-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.driver-text p {
+    margin: 0.2rem 0;
+}
+
+.carpools-list {
+    max-width: 800px;
+    margin: 1.5rem auto 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.carpool-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    border: 1px solid #e3e3e3;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+.carpool-card .driver-info {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.carpool-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.carpool-body {
+    margin-bottom: 0.75rem;
+}
+
+.carpool-footer {
+    text-align: right;
+}
+
+.btn-detail {
+    display: inline-block;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    border: none;
+    background-color: #1E5631;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-detail:hover {
+    opacity: 0.9;
+}
+
+.carpool-detail h1 {
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+}
+
+.carpool-detail {
+    max-width: 900px;
+    margin: 0 auto 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.detail-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid #e4e4e4;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.detail-trip .trip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.trip-cities,
+.trip-dates,
+.trip-extra {
+    min-width: 180px;
+}
+
+.detail-driver-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.driver-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.driver-name {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.driver-rating-line {
+    margin: 0;
+}
+
+.driver-small-info {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.detail-driver-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.detail-block h3 {
+    margin-top: 0;
+    margin-bottom: 0.4rem;
+    font-size: 1rem;
+}
+
+.review-card {
+    padding: 0.6rem 0;
+    border-top: 1px solid #eee;
+    font-size: 0.9rem;
+}
+
+.review-card:first-of-type {
+    border-top: none;
+}
+
+.review-header {
+    margin: 0 0 0.2rem;
+}
+
+.review-rating {
+    margin: 0 0 0.3rem;
+}
+
+.review-date {
+    margin: 0.3rem 0 0;
+    font-size: 0.8rem;
+    color: #777;
+}
+
+.detail-back-link {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+.detail-back-link a {
+    color: #1E5631;
+    text-decoration: none;
+}
+.detail-back-link a:hover {
+    text-decoration: underline;
+}
+
+.login-hint {
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    background-color: #fff7e6;
+    border: 1px solid #ffd48a;
+    font-size: 0.95rem;
+}
+
+.login-hint a {
+    color: #1E5631;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.login-hint a:hover {
+    text-decoration: underline;
+}
+/* ===================== */
+/*  MODALE CONNEXION     */
+/* ===================== */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: none;                 /* cachée par défaut */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-overlay.is-open {
+    display: flex;                 /* visible quand on ajoute la classe is-open */
+}
+
+.modal-box {
+    background: #ffffff;
+    padding: 1.8rem 1.6rem 1.4rem;
+    border-radius: 14px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+    position: relative;
+    text-align: center;
+    animation: modal-fade-in 0.2s ease-out;
+}
+
+.modal-box h2 {
+    margin-top: 0;
+    margin-bottom: 0.8rem;
+    font-size: 1.4rem;
+}
+
+.modal-box p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.modal-actions {
+    margin-top: 1.4rem;
+    display: flex;
+    justify-content: center;
+}
+
+.btn-modal {
+    display: inline-block;
+    padding: 0.6rem 1.6rem;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #1E5631, #2f8f4e);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn-modal:hover {
+    transform: translateY(-1px) scale(1.01);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+    background: linear-gradient(90deg, #184925, #2a7e46);
+}
+
+.btn-participate {
+    display: inline-block;
+    padding: 0.9rem 2.5rem;          
+    border-radius: 999px;            
+    border: none;
+    background: linear-gradient(90deg, #1E5631, #2f8f4e);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.btn-participate:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.18);
+    background: linear-gradient(90deg, #184925, #2a7e46);
+}
+
+.modal-close {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.7rem;
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #666;
+}
+
+.modal-close:hover {
+    color: #222;
+}
+
+@keyframes modal-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+
+
 /* ===================== */
 /*  RESPONSIVE DESIGN    */
 /* ===================== */
@@ -252,7 +563,13 @@ body {
         width: 100%;
         min-width: 0;
     }
+    
+    .driver-photo {
+      width: 56px;
+      height: 56px;
+  }
 }
+
 /*screen 769 et 1024 */
 @media (min-width: 769px) and (max-width: 1024px) {
 

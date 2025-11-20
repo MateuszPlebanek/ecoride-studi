@@ -14,10 +14,10 @@ Ce projet est réalisé dans le cadre du Titre Professionnel DWWM / ECF.
 ## 🧱 Stack technique
 
 - **Langage :** PHP 8
-- **Architecture :** MVC léger (sans framework)
+- **Architecture :** MVC (sans framework)
 - **Base de données relationnelle :** MySQL
 - **Base NoSQL :** MongoDB (prévu pour les parties avis / logs)
-- **Front :** HTML5, CSS3, un peu de JavaScript vanilla
+- **Front :** HTML5, CSS3, JavaScript vanilla
 - **Serveur de dev :** `php -S`
 
 ### Configuration de la base de données
@@ -28,7 +28,16 @@ Copier le fichier `.env.example` en `.env.local` :
 cp .env.example .env.local
 
 ### 📌 Installation
-1. Cloner ce dépôt :
+Cloner ce dépôt :
 ```bash
 git clone https://github.com/MateuszPlebanek/ecoride-studi.git
+
+### ▶️ Lancer l’application en local
+
+Après avoir cloné le dépôt :
+
+```bash
 cd ecoride-studi
+Importer la base de données MySQL (fichier sql/schema.sql), 
+puis démarrer le serveur PHP intégré :
+php -S localhost:8001 -t public
