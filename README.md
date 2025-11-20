@@ -20,6 +20,12 @@ Ce projet est réalisé dans le cadre du Titre Professionnel DWWM / ECF.
 - **Front :** HTML5, CSS3, un peu de JavaScript vanilla
 - **Serveur de dev :** `php -S`
 
+### Configuration de la base de données
+
+Copier le fichier `.env.example` en `.env.local` :
+
+```bash
+cp .env.example .env.local
 
 ### 📌 Installation
 1. Cloner ce dépôt :
